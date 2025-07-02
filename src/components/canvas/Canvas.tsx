@@ -1,6 +1,6 @@
 
 import { useEffect, useRef, forwardRef } from "react";
-import { Canvas as FabricCanvas, Circle, Rect } from "fabric";
+import { Canvas as FabricCanvas, FabricImage } from "fabric";
 
 interface CanvasProps {
   imageUrl?: string;
@@ -23,14 +23,21 @@ export const Canvas = forwardRef<HTMLCanvasElement, CanvasProps>(({ imageUrl }, 
 
     // Load image if provided
     if (imageUrl) {
-      const img = new Image();
-      img.onload = () => {
-        canvas.setBackgroundImage(imageUrl, canvas.renderAll.bind(canvas), {
-          scaleX: canvas.width! / img.width,
-          scaleY: canvas.height! / img.height
+      FabricImage.fromURL(imageUrl).then((img) => {
+        // Scale image to fit canvas
+        const scaleX = canvas.width! / img.width!;
+        const scaleY = canvas.height! / img.height!;
+        const scale = Math.min(scaleX, scaleY);
+        
+        img.scale(scale);
+        img.set({
+          left: (canvas.width! - img.width! * scale) / 2,
+          top: (canvas.height! - img.height! * scale) / 2,
         });
-      };
-      img.src = imageUrl;
+        
+        canvas.add(img);
+        canvas.renderAll();
+      });
     }
 
     return () => {

@@ -13,11 +13,13 @@ interface FileUploadProps {
 export const FileUpload = ({ onFileUpload }: FileUploadProps) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (!file) return;
 
+    setSelectedFiles([file]);
     setIsUploading(true);
     setUploadProgress(0);
 
@@ -37,7 +39,7 @@ export const FileUpload = ({ onFileUpload }: FileUploadProps) => {
     }, 100);
   }, [onFileUpload]);
 
-  const { getRootProps, getInputProps, isDragActive, acceptedFiles } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       'video/*': ['.mp4', '.avi', '.mov', '.mkv', '.webm'],
@@ -51,6 +53,10 @@ export const FileUpload = ({ onFileUpload }: FileUploadProps) => {
     if (file.type.startsWith('video/')) return FileVideo;
     if (file.type.startsWith('image/')) return FileImage;
     return Upload;
+  };
+
+  const removeFile = (indexToRemove: number) => {
+    setSelectedFiles(files => files.filter((_, index) => index !== indexToRemove));
   };
 
   if (isUploading) {
@@ -104,9 +110,9 @@ export const FileUpload = ({ onFileUpload }: FileUploadProps) => {
         </div>
       </div>
 
-      {acceptedFiles.length > 0 && (
+      {selectedFiles.length > 0 && (
         <div className="space-y-2">
-          {acceptedFiles.map((file, index) => {
+          {selectedFiles.map((file, index) => {
             const Icon = getFileIcon(file);
             return (
               <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -122,7 +128,7 @@ export const FileUpload = ({ onFileUpload }: FileUploadProps) => {
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    acceptedFiles.splice(index, 1);
+                    removeFile(index);
                   }}
                 >
                   <X className="w-4 h-4" />
